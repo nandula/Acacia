@@ -1,5 +1,5 @@
 /**
-Copyright 2015 Acacia Team
+Copyright 2016 Acacia Team
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ import org.acacia.log.Logger;
  * analogy for Neo4j store which was used in earlier Acacia versions. 
  */
 
-public class AcaciaHashMapLocalStore implements AcaciaLocalStore{
+public class AcaciaHashMapIncrementalStore implements AcaciaLocalStore{
     private val VERTEX_STORE_NAME = "acacia.nodestore.db";
     private val EDGE_STORE_NAME = "acacia.edgestore.db";
     private val ATTRIBUTE_STORE_NAME = "acacia.attributestore.db";
@@ -144,6 +144,7 @@ public class AcaciaHashMapLocalStore implements AcaciaLocalStore{
         try {
              stream:FileOutputStream  = new FileOutputStream(instanceDataFolderLocation + File.separator + "acacia.edgestore.db");
              output:Output = new Output(stream);
+             //this.kryo.writeObject(output, localSubGraphMap);
              this.kryo.writeClassAndObject(output, toJavaHashMap(localSubGraphMap));
              stream.flush();
              output.close();
@@ -159,7 +160,7 @@ public class AcaciaHashMapLocalStore implements AcaciaLocalStore{
     }
     
     public def addVertex(attributes:Rail[Any]):void{
-        
+        //Do not do anything here.
     }
     
     public def addEdge(startVid:Long, endVid:Long):void{

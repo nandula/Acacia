@@ -141,23 +141,13 @@ public class AcaciaServer {
         
         //var partIndexFlags:Rail[Boolean] = new Rail[Boolean](org.acacia.util.java.Utils_Java.getPrivateHostList().length);
         //val href = GlobalRef[HashMap[String, Boolean]](hostHashMap);
+        
+     
     	finish{
     		//if(standaloneFlag){
 			    for (p in Place.places()){
 			            // finish{
-			              /* if(p.id == 0){
-				               async {
-					               //PlaceToNodeMapper.getHost(p.id) + " port : " + PlaceToNodeMapper.getInstancePort(p.id)
-					               //java.lang.System.setProperty("logFileName", ""+here.id);
-					               //java.lang.System.setProperty("ACACIA_INSTANCE_PORT", "" + PlaceToNodeMapper.getInstancePort(p.id));
-					               //ACACIA_INSTANCE_DATA_PORT
-					               //java.lang.System.setProperty("ACACIA_INSTANCE_DATA_PORT", "" + PlaceToNodeMapper.getFileTransferServicePort(p.id));
-					               
-					               //Console.OUT.println("logFileName : " + java.lang.System.getProperty("logFileName") + " ACACIA_INSTANCE_PORT : " + PlaceToNodeMapper.getInstancePort(p.id) + " ACACIA_INSTANCE_DATA_PORT : " + PlaceToNodeMapper.getFileTransferServicePort(p.id));
-					               Console.OUT.println(here+" says hellowrw and ");
-					               test.acacia.server.x10.TestAcaciaInstance.main(null);
-			               	   	}
-			               }else{*/
+				               /*   }else{*/
 							   at(p) async {
 							    	//PlaceToNodeMapper.getHost(p.id) + " port : " + PlaceToNodeMapper.getInstancePort(p.id)
 							        //java.lang.System.setProperty("logFileName", ""+here.id);
@@ -177,7 +167,27 @@ public class AcaciaServer {
 						    Console.OUT.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 						    Console.OUT.println("Current host is : " + curHost);
 						    Console.OUT.println("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ");
-			    }  
+						    if(p.id == 0){
+						    	async {
+						    		frontend = new AcaciaFrontEnd();
+						    		frontend.run();
+						    	}
+						    }
+			    }
+			    
+			  /* val pg:PlaceGroup = Place.places();
+			    
+			    while (true){
+				    for (p in pg){
+				       if(p.isDead()){
+				            Console.OUT.println("--->Place ID: " + p.id + " is dead.");
+				       }else{
+				       		Console.OUT.println("Place ID: " + p.id + " is alive.");
+				       }
+				    }
+				    
+				    System.sleep(1000);
+			    }*/
 			    
 			    //}
 			    /*for (p in Place.places()){
@@ -236,6 +246,7 @@ public class AcaciaServer {
 		}*/
 	       
     	}
+        
 
 /*finish{
 for (p in Place.places()) {
@@ -572,71 +583,10 @@ for (p in Place.places()) {
 	    val nThreads:Int = Int.parse(Utils.call_getAcaciaProperty("org.acacia.partitioner.local.threads"));//4n; //This should be ideally determined based on the number of hardware threads available on each host.
 
 	    val nPlaces:Int = AcaciaManager.getNPlaces(org.acacia.util.Utils.getPrivateHostList()(0));
-	    Console.OUT.println("MMMMMMMMMMMMMMMMMMMMMM--->nPlaces:" + nPlaces);
 	    rdfPartitioner.convert(item, graphID, edgeListPath, Utils.call_getAcaciaProperty("org.acacia.server.runtime.location"), nPlaces, isDistrbutedCentralPartitions, nThreads, nPlaces);
 	    rdfPartitioner.distributePartitionedData();
 	    
-	    // val initialPartID:Int = rdfPartitioner.getInitlaPartitionID();
-	    // //val lst:x10.interop.Java.array[x10.lang.String] = converter.getPartitionFileList();
-	    // var batchUploadFileList:Rail[String] = rdfPartitioner.getPartitionFileList();
-	    // 
-	    // var ptnArrLst:Rail[String] = rdfPartitioner.getPartitionIDList();
-	    // 
-	    // 
-	    // Console.OUT.println("+++++++++++++++++A");
-	    // val itr:Iterator[Place] = Place.places().iterator();
-	    // val placeToHostMap:HashMap[Long, String] = new HashMap[Long, String]();
-	    // 
-	    // while(itr.hasNext()){
-	    // val p:Place = itr.next();
-	    // Console.OUT.println("+++++++++++++++++K p.id " + p.id);
-	    // 
-	    // val hostName:String = PlaceToNodeMapper.getHost(p.id);
-	    // 
-	    // Console.OUT.println("+++++++++++++++++K p.id " + p.id + " hostName : " + hostName);
-	    // placeToHostMap.put(p.id, hostName);
-	    // Console.OUT.println("+++++++++++++++++B");
-	    // }
-	    // Console.OUT.println("+++++++++++++++++C");
-	    // Console.OUT.println("placeToHostMap.entries() : " + placeToHostMap.entries().size());
-	    // var itr2:Iterator[x10.util.Map.Entry[Long, String]] = placeToHostMap.entries().iterator();
-	    // Console.OUT.println("+++++++++++++++++C");
-	    // 
-	    // val hostIDMap:HashMap[String, String] = getLiveHostIDList();
-	    // var i:Long = 0;
-	    // val fileListLen = batchUploadFileList.size;
-	    // 
-	    // while(itr2.hasNext()){
-	    // val itemHost:x10.util.Map.Entry[Long, String] = itr2.next();
-	    // if(itemHost==null){
-	    // return;
-	    // }
-	    // 
-	    // //0 : <host> : /home/miyurud/tmp/61_254.gz
-	    // val filePath:String = batchUploadFileList(i);
-	    // val partitionID:String = filePath.substring(filePath.indexOf("_")+1n, filePath.indexOf("."));
-	    // call_batchUploadFile(itemHost.getValue(), PlaceToNodeMapper.getInstancePort(itemHost.getKey()), Long.parse(graphID), batchUploadFileList(i), PlaceToNodeMapper.getFileTransferServicePort(itemHost.getKey()));
-	    // Console.OUT.println("========================>Super2");
-	    // //Once we are done with batch uploading the partition file, we need to update the related tables.
-	    // call_runInsert("INSERT INTO ACACIA_META.HOST_HAS_PARTITION(host_idhost, partition_idpartition, partition_graph_idgraph) VALUES(" + hostIDMap.get(itemHost.getValue()) + "," + partitionID + "," + graphID + ")");
-	    // 
-	    // val vcount:Long = call_countVertices(""+itemHost.getValue(), graphID, partitionID);
-	    // Console.OUT.println("** vcnt : " + vcount);
-	    // val ecount:Long = call_countEdges(""+itemHost.getValue(), graphID, partitionID);
-	    // Console.OUT.println("** ecnt : " + ecount);
-	    // 
-	    // val result:Boolean = call_runUpdate("UPDATE ACACIA_META.PARTITION SET VERTEXCOUNT=" + vcount + ", EDGECOUNT=" + ecount + " WHERE GRAPH_IDGRAPH=" + graphID + " and IDPARTITION=" + partitionID);
-	    // Console.OUT.println("Result is : " + result);
-	    // i++;
-	    // 
-	    // if(i >= fileListLen){
-	    // break;
-	    // }
-	    //}
-	    Console.OUT.println("+++++++++++++++++D");
 	    MetaDataDBInterface.runUpdate("UPDATE ACACIA_META.GRAPH SET UPLOAD_END_TIME='" + call_getCurrentTimeStamp() + "', GRAPH_STATUS_IDGRAPH_STATUS=" + GraphStatus.OPERATIONAL + " WHERE IDGRAPH=" + graphID);
-	    
-	    
     }
        
     /**
@@ -1050,20 +1000,12 @@ for (p in Place.places()) {
      * This method must be deprecated becase its seems inserting edges in an adhoc manner.
      */
     public static def insertEdge(val host:String, val graphID:Long, val startVert:Long, val endVert:Long){
-    	finish{
-	    	// if(hostPlaceMap.get(host) != null){
-		    // 	val selectedPlace:Long = hostPlaceMap.get(host).value;
-		    // 	val res:Boolean = at(Place.places()(selectedPlace)){
-		    // 		return call_insertEdge(System.getenv("HOSTNAME"), graphID, startVert, endVert);
-		    // 	};
-		    // 	
-		    // 	if(res){
-		    // 		Console.OUT.println("Edge insert success : " + startVert + " to : " + endVert);
-		    // 	}
-	    	// }else{
-	    	// 	Console.OUT.println("Entry for host : " + host + " is null.");
-	    	// }
-    	}
+        if(hostPlaceMap.containsKey(host)){
+            val selectedPlace:Long = hostPlaceMap.get(host);
+            val res:Boolean = at(Place.places()(selectedPlace)){
+                return AcaciaManager.insertEdge(System.getenv("HOSTNAME"), graphID, startVert, endVert);
+            };
+        }
     }
     
     public static def initGraph(val graphID:Int){    	

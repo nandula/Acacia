@@ -17,6 +17,11 @@ limitations under the License.
 package org.acacia.server;
 
 import x10.util.HashMap;
+import x10.util.Map;
+import x10.util.ArrayList;
+import x10.lang.Iterator;
+import x10.util.StringBuilder;
+import x10.interop.Java;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,6 +34,7 @@ import java.io.PrintWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -36,11 +42,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.lang.Process;
 import java.lang.Runtime;
-
-import x10.util.Map;
-import x10.util.ArrayList;
-import x10.lang.Iterator;
-import x10.util.StringBuilder;
 
 import com.google.common.base.Splitter;
 
@@ -56,7 +57,6 @@ import org.acacia.localstore.AcaciaLocalStoreFactory;
 import org.acacia.localstore.AcaciaLocalStoreTypes;
 import org.acacia.log.Logger;
 import org.acacia.util.Utils;
-
 import org.acacia.util.java.Utils_Java;
 import org.acacia.centralstore.AcaciaHashMapCentralStore;
 import org.acacia.events.java.ShutdownEvent;
@@ -70,8 +70,6 @@ import org.acacia.rdf.sparql.ResultsCache;
 import org.acacia.rdf.sparql.InterimResult;
 import org.acacia.query.algorithms.kcore.KCore;
 import org.acacia.server.java.AcaciaInstanceProtocol;
-import x10.interop.Java;
-import java.io.ObjectOutputStream;
 
 /**
  * Note that one AcaciaInstanceServiceSession will be run by only one place.
@@ -80,25 +78,24 @@ import java.io.ObjectOutputStream;
  * 
  */
 public class AcaciaInstanceServiceSession extends java.lang.Thread{	
-	private var sessionSkt:Socket;
-	//private GraphDatabaseService graphDB;//This is a reference to the original DB
-	private var listener:DBTruncateEventListener;
-	private var listenerShtdn:ShutdownEventListener;
-	//private HashMap<Integer, GraphDatabaseService> graphDBMap = null;
-	//Note : Feb 4 2015 - Since we need to deal with the <praphID>_<partitionID> scenario,
-	//the key of the graph db map was changed to String
-	private var graphDBMap:HashMap[String, AcaciaLocalStore] = null;
-	private var loadedGraphs:ArrayList[String];
-	private var defaultGraph:AcaciaLocalStore = null;
-	private var defaultGraphID:String = null;
-	private var dataFolder:String;
-	private var serverHostName:String;
+    private var sessionSkt:Socket;
+    //private GraphDatabaseService graphDB;//This is a reference to the original DB
+    private var listener:DBTruncateEventListener;
+    private var listenerShtdn:ShutdownEventListener;
+    //private HashMap<Integer, GraphDatabaseService> graphDBMap = null;
+    //Note : Feb 4 2015 - Since we need to deal with the <praphID>_<partitionID> scenario,
+    //the key of the graph db map was changed to String
+    private var graphDBMap:HashMap[String, AcaciaLocalStore] = null;
+    private var loadedGraphs:ArrayList[String];
+    private var defaultGraph:AcaciaLocalStore = null;
+    private var defaultGraphID:String = null;
+    private var dataFolder:String;
+    private var serverHostName:String;
     private var sparqlQueryCache:ResultsCache = null;
     private var nonCached:Boolean = false;
     private var execute_query:ExecuteQuery = null;
     
 	public def this(){
-        
 	}
 	
 	/**
@@ -171,44 +168,44 @@ public class AcaciaInstanceServiceSession extends java.lang.Thread{
 					out.println(AcaciaInstanceProtocol.OK);
 					out.flush();
 				}else if(msg.equals(AcaciaInstanceProtocol.INSERT_EDGES)){
-//					out.println(AcaciaInstanceProtocol.OK);
-//					out.flush();
-//					
-//					//From here onwards we should receive a collection of edges
-//					msg = buff.readLine();
-//					
-//					String graphID = msg;
-//					
-//					Logger.info("graph id is : " + msg);
-//					
-//					out.println(AcaciaInstanceProtocol.OK);
-//					out.flush();
-//					
-//					//This is the partition ID
-//					msg = buff.readLine();
-//					
-//					setDefaultGraph(graphID, msg);
-//					
-//					//Just return an acknowledgement.
-//					out.println(AcaciaInstanceProtocol.OK);
-//					out.flush();
-//					
-//					msg = buff.readLine();
-//					
-//					while(!msg.equals(AcaciaInstanceProtocol.INSERT_EDGES_COMPLETE)){
-//						Logger.info("Adding Edge : " + msg);
-//						String[] vertsArr = msg.split(" ");//We expect the edge to be split by a space.
-//						try{
-//							insertEdgeUsingIndex(Long.parseLong(vertsArr[0]), Long.parseLong(vertsArr[1]));
-//						}catch(NumberFormatException ex){
-//							//Just ignore. Expect the messages only in the for <long> <long> <long>
-//							Logger.error("Error : " + ex.getMessage());
-//						}
-//						msg = buff.readLine();
-//					}
-//					
-//					out.println(AcaciaInstanceProtocol.INSERT_EDGES_ACK);
-//					out.flush();
+					out.println(AcaciaInstanceProtocol.OK);
+					out.flush();
+					
+					//From here onwards we should receive a collection of edges
+					msg = buff.readLine();
+					
+					var graphID:String = msg;
+					
+					Logger.info("graph id is : " + msg);
+					
+					out.println(AcaciaInstanceProtocol.OK);
+					out.flush();
+					
+					//This is the partition ID
+					msg = buff.readLine();
+					
+					setDefaultGraph(graphID, msg);
+					
+					//Just return an acknowledgement.
+					out.println(AcaciaInstanceProtocol.OK);
+					out.flush();
+					
+					msg = buff.readLine();
+					
+					while(!msg.equals(AcaciaInstanceProtocol.INSERT_EDGES_COMPLETE)){
+						Logger.info("Adding Edge : " + msg);
+						val vertsArr:Rail[String] = msg.split(" ");//We expect the edge to be split by a space.
+						try{
+							insertEdge(Long.parse(graphID), Long.parse(vertsArr(0)), Long.parse(vertsArr(1)));
+						}catch(val ex:NumberFormatException){
+							//Just ignore. Expect the messages only in the for <long> <long> <long>
+							Logger.error("Error : " + ex.getMessage());
+						}
+						msg = buff.readLine();
+					}
+					
+					out.println(AcaciaInstanceProtocol.INSERT_EDGES_ACK);
+					out.flush();
 				}else if (msg.equals(AcaciaInstanceProtocol.TRUNCATE)){					
 					fireDBTruncateEvent(new DBTruncateEvent("Truncating Acacia Instance"));
 					out.println(AcaciaInstanceProtocol.TRUNCATE_ACK);
@@ -401,82 +398,154 @@ public class AcaciaInstanceServiceSession extends java.lang.Thread{
 							out.flush();
 						}
 					}
-					
 					out.println(AcaciaInstanceProtocol.BATCH_UPLOAD_ACK);//This is the sign of upload completeion.
 					out.flush();
 				}else if(msg.equals(AcaciaInstanceProtocol.BATCH_UPLOAD_REPLICATION)){
-					out.println(AcaciaInstanceProtocol.OK);
-					out.flush();
+out.println(AcaciaInstanceProtocol.OK);
+out.flush();
 
-					msg = buff.readLine().trim();
+msg = buff.readLine().trim();
 
-					val placeID:String = msg;
+val placeID:String = msg;
 
-					out.println(AcaciaInstanceProtocol.SEND_GID);
-					out.flush();
+out.println(AcaciaInstanceProtocol.SEND_GID);
+out.flush();
 
-					msg = buff.readLine().trim();
-					val graphID:String = msg;
+msg = buff.readLine().trim();
+val graphID:String = msg;
 
-					out.println(AcaciaInstanceProtocol.SEND_FILE_NAME);
-					out.flush();
+out.println(AcaciaInstanceProtocol.SEND_FILE_NAME);
+out.flush();
 
-					msg = buff.readLine().trim();
-					var fileName:String = msg;
+msg = buff.readLine().trim();
+var fileName:String = msg;
 
-					out.println(AcaciaInstanceProtocol.SEND_FILE_LEN);
-					out.flush();
+out.println(AcaciaInstanceProtocol.SEND_FILE_LEN);
+out.flush();
 
-					msg = buff.readLine().trim();
-					val fileLen:Long = Long.parseLong(msg);
+msg = buff.readLine().trim();
+val fileLen:Long = Long.parseLong(msg);
 
-					out.println(AcaciaInstanceProtocol.SEND_FILE_CONT);
-					out.flush();
+out.println(AcaciaInstanceProtocol.SEND_FILE_CONT);
+out.flush();
 
-					//Here we need to get the file size and then check if the file size has been achieved.
-					//Mere file exitance is not enough to continue, because we might have another thread writing data to the file. 
+//Here we need to get the file size and then check if the file size has been achieved.
+//Mere file exitance is not enough to continue, because we might have another thread writing data to the file. 
 
-					val fullFilePath:String = "/tmp/dgr/" + fileName;
-					val f:File = new File(fullFilePath);
+val fullFilePath:String = "/tmp/dgr/" + fileName;
+val f:File = new File(fullFilePath);
 
-					while((!f.exists()) && (f.length() < fileLen)){
-						msg = buff.readLine().trim();
+while((!f.exists()) && (f.length() < fileLen)){
+msg = buff.readLine().trim();
 
-						Logger.info("curlen : " + f.length() + " fileLen : " + fileLen);
+Logger.info("curlen : " + f.length() + " fileLen : " + fileLen);
 
-						if(msg.equals(AcaciaInstanceProtocol.FILE_RECV_CHK)){
-							out.println(AcaciaInstanceProtocol.FILE_RECV_WAIT);
-							out.flush();
-						}
-					}
+if(msg.equals(AcaciaInstanceProtocol.FILE_RECV_CHK)){
+out.println(AcaciaInstanceProtocol.FILE_RECV_WAIT);
+out.flush();
+}
+}
 
-					msg = buff.readLine().trim();
+msg = buff.readLine().trim();
 
-					if(msg.equals(AcaciaInstanceProtocol.FILE_RECV_CHK)){
-						out.println(AcaciaInstanceProtocol.FILE_ACK);
-						out.flush();
-					}
+if(msg.equals(AcaciaInstanceProtocol.FILE_RECV_CHK)){
+out.println(AcaciaInstanceProtocol.FILE_ACK);
+out.flush();
+}
 
-					Logger.info("Got the file : " + fileName);
+Logger.info("Got the file : " + fileName);
 
-					fileName = fileName.substring(fileName.indexOf("_") + 1n, fileName.indexOf("."));
-					Logger.info("Partition ID : " + fileName);
-					//here is where local store is constructed
-					//the fileName contains the graph partitionID. So we do not have to specifiy that again here.
-					unzipAndBatchUploadReplication(graphID, fileName,placeID);
+fileName = fileName.substring(fileName.indexOf("_") + 1n, fileName.indexOf("."));
+Logger.info("Partition ID : " + fileName);
+//here is where local store is constructed
+//the fileName contains the graph partitionID. So we do not have to specifiy that again here.
+unzipAndBatchUploadReplication(graphID, fileName,placeID);
 
-					while(!isUploadCompleted(fullFilePath)){
-						msg = buff.readLine().trim();
+while(!isUploadCompleted(fullFilePath)){
+msg = buff.readLine().trim();
 
-						if(msg.equals(AcaciaInstanceProtocol.BATCH_UPLOAD_CHK)){
-							out.println(AcaciaInstanceProtocol.BATCH_UPLOAD_WAIT);
-							out.flush();
-						}
-					}
+if(msg.equals(AcaciaInstanceProtocol.BATCH_UPLOAD_CHK)){
+out.println(AcaciaInstanceProtocol.BATCH_UPLOAD_WAIT);
+out.flush();
+}
+}
 
-					out.println(AcaciaInstanceProtocol.BATCH_UPLOAD_ACK);//This is the sign of upload completeion.
-					out.flush();
-				}else if(msg.equals(AcaciaInstanceProtocol.OUT_DEGREE_DIST)){
+out.println(AcaciaInstanceProtocol.BATCH_UPLOAD_ACK);//This is the sign of upload completeion.
+out.flush();
+}else if(msg.equals(AcaciaInstanceProtocol.BATCH_UPLOAD_REPLICATION_CENTRAL)){
+out.println(AcaciaInstanceProtocol.OK);
+out.flush();
+
+msg = buff.readLine().trim();
+
+val placeID:String = msg;
+
+out.println(AcaciaInstanceProtocol.SEND_GID);
+out.flush();
+
+msg = buff.readLine().trim();
+val graphID:String = msg;
+
+out.println(AcaciaInstanceProtocol.SEND_FILE_NAME);
+out.flush();
+
+msg = buff.readLine().trim();
+var fileName:String = msg;
+
+out.println(AcaciaInstanceProtocol.SEND_FILE_LEN);
+out.flush();
+
+msg = buff.readLine().trim();
+val fileLen:Long = Long.parseLong(msg);
+
+out.println(AcaciaInstanceProtocol.SEND_FILE_CONT);
+out.flush();
+
+//Here we need to get the file size and then check if the file size has been achieved.
+//Mere file exitance is not enough to continue, because we might have another thread writing data to the file. 
+
+val fullFilePath:String = "/tmp/dgr/" + fileName;
+val f:File = new File(fullFilePath);
+
+while((!f.exists()) && (f.length() < fileLen)){
+msg = buff.readLine().trim();
+
+Logger.info("curlen : " + f.length() + " fileLen : " + fileLen);
+
+if(msg.equals(AcaciaInstanceProtocol.FILE_RECV_CHK)){
+out.println(AcaciaInstanceProtocol.FILE_RECV_WAIT);
+out.flush();
+}
+}
+
+msg = buff.readLine().trim();
+
+if(msg.equals(AcaciaInstanceProtocol.FILE_RECV_CHK)){
+out.println(AcaciaInstanceProtocol.FILE_ACK);
+out.flush();
+}
+
+Logger.info("Got the file : " + fileName);
+
+fileName = fileName.substring(fileName.indexOf("_") + 1n, fileName.lastIndexOf("_"));
+Logger.info("Partition ID : " + fileName);
+//here is where local store is constructed
+//the fileName contains the graph partitionID. So we do not have to specifiy that again here.
+unzipAndBatchUploadReplicationCentral(graphID, fileName,placeID);
+
+while(!isUploadCompleted(fullFilePath)){
+Console.OUT.println("uploading");
+msg = buff.readLine().trim();
+
+if(msg.equals(AcaciaInstanceProtocol.BATCH_UPLOAD_CHK)){
+out.println(AcaciaInstanceProtocol.BATCH_UPLOAD_WAIT);
+out.flush();
+}
+}
+
+out.println(AcaciaInstanceProtocol.BATCH_UPLOAD_ACK);//This is the sign of upload completeion.
+out.flush();
+}else if(msg.equals(AcaciaInstanceProtocol.OUT_DEGREE_DIST)){
 					out.println(AcaciaInstanceProtocol.OK);
 					out.flush();
 					
@@ -738,7 +807,87 @@ public class AcaciaInstanceServiceSession extends java.lang.Thread{
 						out.println("Empty");
 						out.flush();
 					}
-				 }else if(msg.equals(AcaciaInstanceProtocol.RUN_KCORE)){ 
+				 }else if(msg.equals(AcaciaInstanceProtocol.EXECUTE_QUERY_WITH_REPLICATION)){
+				 out.println(AcaciaInstanceProtocol.SEND_QUERY);
+				 out.flush();
+				 msg = buff.readLine().trim();
+				 val query:String=msg;
+				 
+				 out.println(AcaciaInstanceProtocol.SEND_GID);
+				 out.flush();
+				 msg = buff.readLine().trim();
+				 val gID:String=msg;
+				 
+				 out.println(AcaciaInstanceProtocol.SEND_PARTITION_ID);
+				 out.flush();
+				 msg = buff.readLine().trim();
+				 val pID:String=msg;
+
+				 out.println(AcaciaInstanceProtocol.SEND_PLACEID);
+				 out.flush();
+				 msg = buff.readLine().trim();
+				 val placeID:String=msg;
+				 
+				 out.println(AcaciaInstanceProtocol.REPLICATING_ID);
+				 out.flush();
+				 msg = buff.readLine().trim();
+				 val replicatingID:String=msg;
+				 
+				 out.println(AcaciaInstanceProtocol.SEND_PLACEDETAILS);
+				 out.flush();
+				 msg = buff.readLine().trim();
+				 val placeDetails:String=msg;
+				 
+				 val gIDi = Int.parse(gID);
+				 val pIDi = Int.parse(pID);
+				 val placeIDi = Int.parse(placeID);
+
+				 //var result:ArrayList[String] = sparqlQueryCache.getFromCache(query,gIDi,pIDi,placeIDi);
+				 var result:ArrayList[InterimResult] = null;
+				 
+				 //if((result == null) || !nonCached){
+				 //locally get the answers
+				 execute_query=new ExecuteQuery();  
+				 //result = execute_query.executeQuery(query,gID,pID,placeID);
+				 result = execute_query.executeWithoutMerge(query,gID,pID,placeID,replicatingID);
+				 
+				 //Jan 24, 2016: For the moment we disable the caching feature
+				 //sparqlQueryCache.putToCache(query,gIDi,pIDi,placeIDi, result);
+				 //}
+				 
+				 //globally get the answers
+				 //Console.OUT.println(placeDetails);
+				 //loadDistributedCentralStoreData(gID,pID,placeID,placeDetails);
+				 
+				 if((result != null) && (!result.isEmpty())){
+				 out.println("Not empty");
+				 out.flush();
+				 //TODO:serialize
+				 msg = buff.readLine().trim();
+				 if(msg.equals("Send")){
+				 val oos = new ObjectOutputStream(sessionSkt.getOutputStream());
+				 oos.writeObject(result);
+				 }
+
+
+				 /*msg = buff.readLine().trim();
+				  * if(msg.equals("Send")){
+				  * out.print(result);
+				  * out.flush();
+				  * }*/
+				 
+				 out.println("Finish");
+				 out.flush();
+				 }
+				 else{
+				 out.println("Empty");
+				 out.flush();
+				 }
+				 }else if(msg.equals(AcaciaInstanceProtocol.RUN_KCORE)){
+					out.println(AcaciaInstanceProtocol.SEND_KVALUE);
+					out.flush();
+					msg = buff.readLine().trim();
+					val kValue:String = msg;
 					
 					out.println(AcaciaInstanceProtocol.SEND_GID);
 					out.flush();
@@ -761,21 +910,21 @@ public class AcaciaInstanceServiceSession extends java.lang.Thread{
 					val placeDetails:String = msg;
 					
  					val kCore:KCore = new KCore();  
-					val result:HashMap[Long,Long] = kCore.getVertexIdsResults(gID,pID,placeID);				
+					val result:ArrayList[Long] = kCore.getVertexIdsResults(kValue,gID,pID,placeID);				
 					
- 					if((result != null) && (result.size() != 0)){
+ 					if((result != null) && (!result.isEmpty())){
  						out.println("Not empty");
  						out.flush();
- 						var itr:Iterator[Long]  = result.keySet().iterator();
- 						while(itr.hasNext()){
- 							var key:Long = itr.next();
+
+ 						for(var i:Int=0n;i<result.size();i++){
+
  							msg = buff.readLine().trim();
-   							if(msg.equals("Send")){
-	   							out.println(key+" "+result.get(key));
-	   							out.flush();
-   							}
+ 							if(msg.equals("Send")){
+ 							out.println(result.get(i));
+ 							out.flush();
+ 							}
  						}
-						out.println("Finish"); 
+						out.println("Finish");
 						out.flush();
  					}
  					else{
@@ -919,6 +1068,7 @@ public class AcaciaInstanceServiceSession extends java.lang.Thread{
 	        		break;
 	        	}
 	        }
+	        reader.close();
         }catch(val e:UnknownHostException){
 			Logger.error("Connecting to localhost got error message (11) : " + e.getMessage());
 		}catch(val ec:IOException){
@@ -1006,9 +1156,7 @@ public class AcaciaInstanceServiceSession extends java.lang.Thread{
 					while((line=b.readLine())!= null){
 						Console.OUT.println(line);
 					}
-					Console.OUT.println("Check 3");
 					
-					Console.OUT.println("Deleting|" + "rm /tmp/dgr/" + graphID + "_" + partitionID + "_trf.zip|");
 					p = r.exec("rm /tmp/dgr/" + graphID + "_" + partitionID + ".zip");
 					p.waitFor();
 					
@@ -1055,18 +1203,13 @@ public class AcaciaInstanceServiceSession extends java.lang.Thread{
 				try{
 					//Unzipping starts here
 					var r:Runtime = Runtime.getRuntime();
-					var p:Process = null;
+					
 					//Next, we unzip the file
-val f:File = new File(Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator+"replication"+File.separator+placeID+File.separator);
-if(!f.exists()){
-f.mkdirs();
-}
-Console.OUT.println("unzip /tmp/dgr/" + graphID + "_" +  partitionID + ".zip -d " + Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator +"replication"+File.separator +placeID+File.separator + graphID + "_" + partitionID);
-/*check the existance of the file*/
-val dir = new File(Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator +"replication"+File.separator +placeID+File.separator + graphID + "_" + partitionID);
-if(!dir.exists()){
-
-					p = r.exec("unzip /tmp/dgr/" + graphID + "_" +  partitionID + ".zip -d " + Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator +"replication"+File.separator +placeID+File.separator + graphID + "_" + partitionID);
+                                        val f:File = new File(Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator+"replication"+File.separator+placeID+File.separator);
+                                        if(!f.exists()){
+                                            f.mkdirs();
+                                        }
+					var p:Process = r.exec("unzip /tmp/dgr/" + graphID + "_" +  partitionID + ".zip -d " + Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator +"replication"+File.separator +placeID+File.separator + graphID + "_" + partitionID);
 					p.waitFor();
 					
 
@@ -1077,7 +1220,7 @@ if(!dir.exists()){
 					while((line=b.readLine())!= null){
 						Console.OUT.println(line);
 					}
-}
+
 					Console.OUT.println("Check 3| replication");
 					
 					Console.OUT.println("Deleting|" + "rm /tmp/dgr/" + graphID + "_" + partitionID + ".zip|");
@@ -1088,22 +1231,67 @@ if(!dir.exists()){
 					writeCatalogRecord("" + graphID + ":" + partitionID);
 					
 				}catch(val e1:java.io.IOException){
-                    Logger.error("Error : " + e1.getMessage());
+                                    Logger.error("Error : " + e1.getMessage());
 				}catch(val e2:java.lang.InterruptedException){
-                    Logger.error("Error : " + e2.getMessage());
+                                    Logger.error("Error : " + e2.getMessage());
 	            }catch(val e:Exception){
-                    Logger.error("Error : " + e.getMessage());
-				}
+                        Logger.error("Error : " + e.getMessage());
+		    }
 	}
+
+public def unzipAndBatchUploadReplicationCentral(val graphID:String, val partitionID:String,val placeID:String) : void {
+
+try{
+//Unzipping starts here
+var r:Runtime = Runtime.getRuntime();
+
+//Next, we unzip the file
+val f:File = new File(Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator+"replication"+File.separator+placeID+File.separator + graphID + "_centralstore");
+if(!f.exists()){
+f.mkdirs();
+}
+var p:Process = r.exec("unzip /tmp/dgr/" + graphID + "_" +  partitionID + "_trf.zip -d " + Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator +"replication"+File.separator +placeID+File.separator + graphID + "_centralstore" +File.separator + graphID + "_" + partitionID );
+p.waitFor();
+
+
+
+val b:BufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+var line:String = "";
+
+while((line=b.readLine())!= null){
+Console.OUT.println("Central store graph sending " + graphID + "_" + partitionID);
+}
+Console.OUT.println("Check 3| replication");
+
+Console.OUT.println("Deleting|" + "rm /tmp/dgr/" + graphID + "_" + partitionID + "_trf.zip|");
+p = r.exec("rm /tmp/dgr/" + graphID + "_" + partitionID + "_trf.zip");		
+p.waitFor();
+
+
+
+}catch(val e1:java.io.IOException){
+Logger.error("Error : " + e1.getMessage());
+}catch(val e2:java.lang.InterruptedException){
+Logger.error("Error : " + e2.getMessage());
+}catch(val e:Exception){
+Logger.error("Error : " + e.getMessage());
+}
+}
 	
 	private def unzipAndBatchUploadCentralStore(val graphID:String, val partitionID:String) : void{
 		try {
-			val f:File = new File(Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator + graphID + "_centralstore");
+            val f:File = new File(Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder"));
+
+            if(!f.isDirectory()){
+               f.mkdir();
+            }
+
+			val f1:File = new File(Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator + graphID + "_centralstore");
 			
-			if(!f.isDirectory()){
-				f.mkdir();
+			if(!f1.isDirectory()){
+				f1.mkdir();
 			}
-			
+
 			val r:Runtime = Runtime.getRuntime();
 			var p:Process = r.exec("unzip /tmp/dgr/" + graphID + "_" + partitionID + "_trf.zip -d " + Utils_Java.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator + graphID + "_centralstore/" + graphID + "_" + partitionID);
 			p.waitFor();
@@ -1231,8 +1419,12 @@ if(!dir.exists()){
 	public def setDefaultGraph(val graphID:String, val partitionID:String):void{
 		val gid:String = graphID + "_" + partitionID;
 		defaultGraph = graphDBMap.get(gid);
-		defaultGraphID = gid;
-		Console.OUT.println("The default graph is set to : " + gid);
+                if(defaultGraph == null){
+                    Console.OUT.println("Default graph is null");
+                }else{
+			defaultGraphID = gid;
+			Console.OUT.println("The default graph is set to : " + gid);
+                }
 	}
 	
 	public def unSetDefaultGraph(val graphID:String, val partitionID:String):void{
@@ -1312,13 +1504,11 @@ if(!dir.exists()){
 			if(graphDB == null){
 				Logger.error("Error : The graph database instance is NULL.");
 			}
+                        graphDB.addEdge(startVertexID, endVertexID);
 		}else{
 			graphDB = defaultGraph;
+                        graphDB.addEdge(startVertexID, endVertexID);
 		}
-		
-		graphDB.addEdge(startVertexID, endVertexID);
-
-		Console.OUT.println("Done adding edge : " + startVertexID + " " + endVertexID);
 	}
 	
 	/**

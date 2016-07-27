@@ -119,7 +119,6 @@ public class AcaciaHashMapNativeStore implements AcaciaLocalStore{
 			instanceDataFolderLocation= dataFolder + "/" + graphID + "_centralstore/" + gid;
 		}
 		this.isCentralStore = isCentralStore;
-		//Logger_Java.info("instanceDataFolderLocation : " + instanceDataFolderLocation);
 		initialize();
 	}
 
@@ -791,7 +790,7 @@ public class AcaciaHashMapNativeStore implements AcaciaLocalStore{
             val record:String = AcaciaLocalStoreCatalogManager.readCatalogRecord(Utils.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator + graphID + "_centralstore", "head");
 
             if(record == null){
-              AcaciaLocalStoreCatalogManager.writeCatalogRecord(Utils.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator + graphID + "_centralstore" + File.separator + graphID + "_" + partitionID, "head", ""+AcaciaLocalStoreTypes.HASH_MAP_NATIVE_STORE);
+              AcaciaLocalStoreCatalogManager.writeCatalogRecord(Utils.getAcaciaProperty("org.acacia.server.instance.datafolder") + File.separator + graphID + "_centralstore" + File.separator + graphID + "_" + partitionID, "head", ""+AcaciaLocalStoreTypes.HASH_MAP_LOCAL_STORE);
             }
         }
 	}
@@ -1062,7 +1061,6 @@ public class AcaciaHashMapNativeStore implements AcaciaLocalStore{
 	}
 
 	public def addEdge(startVid:Long, endVid:Long):void {
-		// TODO Auto-generated method stub
-		
+               addRelationship(startVid, endVid, -1n);
 	}
 }
